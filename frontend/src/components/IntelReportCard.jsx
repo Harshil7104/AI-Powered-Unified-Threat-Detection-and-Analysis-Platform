@@ -6,7 +6,7 @@ export default function IntelReportCard({ virustotal, otx }) {
     if (!virustotal) return <p style={{ color: 'var(--text-light, #94a3b8)' }}>No report available</p>;
     if (virustotal.status === 'unconfigured') {
       return (
-        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #64748b)', background: '#f1f5f9', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
+        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', background: '#020617', border: '1px solid var(--border-color)', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
           <HelpCircle size={16} style={{ flexShrink: 0 }} />
           <span>VirusTotal API key is not configured in backend .env</span>
         </div>
@@ -14,14 +14,14 @@ export default function IntelReportCard({ virustotal, otx }) {
     }
     if (virustotal.status === 'scanning') {
       return (
-        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #64748b)', background: '#f1f5f9', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
+        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', background: '#020617', border: '1px solid var(--border-color)', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
           <Activity size={16} className="animate-pulse" style={{ flexShrink: 0 }} />
           <span>URL submitted to VirusTotal. Analysis in progress...</span>
         </div>
       );
     }
     if (virustotal.status !== 'success') {
-      return <p style={{ color: 'var(--status-danger, #dc2626)', fontSize: '0.85rem' }}>Error: {virustotal.message}</p>;
+      return <p style={{ color: 'var(--status-danger, #ef4444)', fontSize: '0.85rem' }}>Error: {virustotal.message}</p>;
     }
 
     const { malicious, harmless, undetected, reputation } = virustotal;
@@ -30,12 +30,12 @@ export default function IntelReportCard({ virustotal, otx }) {
     return (
       <div className="vt-report-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <div className="vt-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-          <div className="vt-stat-box" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.5rem', borderRadius: '6px', textAlign: 'center' }}>
-            <div style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '1.1rem' }}>{harmless}</div>
-            <div style={{ fontSize: '0.75rem', color: '#16a34a' }}>Clean</div>
+          <div className="vt-stat-box" style={{ background: 'var(--status-safe-bg)', border: '1px solid var(--status-safe-border)', padding: '0.5rem', borderRadius: '6px', textAlign: 'center' }}>
+            <div style={{ color: 'var(--status-safe)', fontWeight: 'bold', fontSize: '1.1rem' }}>{harmless}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--status-safe)' }}>Clean</div>
           </div>
           <div className="vt-stat-box" style={{ 
-            background: hasThreat ? 'var(--status-danger-bg)' : '#f8fafc', 
+            background: hasThreat ? 'var(--status-danger-bg)' : '#020617', 
             border: hasThreat ? '1px solid var(--status-danger-border)' : '1px solid var(--border-color)', 
             padding: '0.5rem', 
             borderRadius: '6px', 
@@ -44,7 +44,7 @@ export default function IntelReportCard({ virustotal, otx }) {
             <div style={{ color: hasThreat ? 'var(--status-danger)' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem' }}>{malicious}</div>
             <div style={{ fontSize: '0.75rem', color: hasThreat ? 'var(--status-danger)' : 'var(--text-muted)' }}>Malicious</div>
           </div>
-          <div className="vt-stat-box" style={{ background: '#f8fafc', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '6px', textAlign: 'center' }}>
+          <div className="vt-stat-box" style={{ background: '#020617', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '6px', textAlign: 'center' }}>
             <div style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem' }}>{undetected}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Undetected</div>
           </div>
@@ -60,7 +60,7 @@ export default function IntelReportCard({ virustotal, otx }) {
     if (!otx) return <p style={{ color: 'var(--text-light, #94a3b8)' }}>No report available</p>;
     if (otx.status !== 'success') {
       return (
-        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #64748b)', background: '#f1f5f9', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
+        <div className="intel-status-unconfigured" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', background: '#020617', border: '1px solid var(--border-color)', padding: '0.6rem 0.85rem', borderRadius: '6px' }}>
           <HelpCircle size={16} style={{ flexShrink: 0 }} />
           <span>{otx.message || "OTX API is unconfigured or unavailable."}</span>
         </div>
