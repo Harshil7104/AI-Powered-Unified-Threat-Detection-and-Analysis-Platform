@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import UrlScan from "./pages/UrlScan";
-import EmailScan from "./pages/EmailScan";
-import FileScan from "./pages/FileScan";
-import AiChat from "./pages/AiChat";
-import Reports from "./pages/Reports";
-import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/login";
+import Dashboard from "./pages/dashboard";
+import UrlScan from "./pages/urlscan";
+import EmailScan from "./pages/emailscan";
+import FileScan from "./pages/filescan";
+import AiChat from "./pages/aichat";
+import Reports from "./pages/reports";
+import ProtectedRoute from "./components/protectedroute";
 
 function App() {
   return (

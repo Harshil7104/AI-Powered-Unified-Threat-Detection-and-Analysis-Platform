@@ -46,6 +46,9 @@ function Login() {
       setTimeout(() => {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userEmail", response.data.email);
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+        }
         setLoading(false);
         navigate("/dashboard");
       }, 800);

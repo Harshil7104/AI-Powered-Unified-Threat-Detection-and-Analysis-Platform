@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { FileText, Search, Trash2, Filter, AlertTriangle, ShieldCheck, RefreshCw, X, ChevronRight, Eye, Loader2 } from "lucide-react";
+import { FileText, Search, Trash2, Filter, AlertTriangle, ShieldCheck, RefreshCw, X, ChevronRight, Eye, Loader2, Download } from "lucide-react";
 import ThreatScoreGauge from "../components/ThreatScoreGauge";
 import "../components/UrlScanner.css"; // reuse layouts
 
@@ -11,6 +11,7 @@ function Reports() {
   const [error, setError] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
   
   // Filters
   const [search, setSearch] = useState("");
@@ -19,6 +20,30 @@ function Reports() {
 
   const navigate = useNavigate();
   const userEmail = localStorage.getItem("userEmail") || "User";
+
+  const handleDownloadPdf = async (reportId, scanType, e) => {
+    if (e) e.stopPropagation();
+    setDownloadingId(reportId);
+    try {
+      const response = await axios.get(`http://localhost:8000/reports/${reportId}/pdf`, {
+        responseType: "blob"
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `ThreatShield_Report_${scanType?.toUpperCase() || "SCAN"}_${reportId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PDF download error:", err);
+      alert("Failed to download PDF report. Please verify backend connection.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const fetchReports = async () => {
     setLoading(true);
@@ -264,20 +289,31 @@ function Reports() {
                             {report.created_at}
                           </td>
                           <td className="py-3.5 px-4 text-right">
-                            <div className="flex justify-end gap-1">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={(e) => handleDownloadPdf(report.id, report.scan_type, e)}
+                                className="p-1 text-slate-400 hover:text-emerald-400 transition"
+                                title="Download PDF Report"
+                              >
+                                {downloadingId === report.id ? (
+                                  <Loader2 size={14} className="animate-spin text-emerald-400" />
+                                ) : (
+                                  <Download size={14} />
+                                )}
+                              </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSelectReport(report.id);
                                 }}
-                                className="p-1 text-slate-450 hover:text-cyan-400 transition"
+                                className="p-1 text-slate-400 hover:text-cyan-400 transition"
                                 title="Inspect Details"
                               >
                                 <Eye size={14} />
                               </button>
                               <button
                                 onClick={(e) => handleDeleteReport(report.id, e)}
-                                className="p-1 text-slate-450 hover:text-red-400 transition"
+                                className="p-1 text-slate-400 hover:text-red-400 transition"
                                 title="Delete Log"
                               >
                                 <Trash2 size={14} />
@@ -351,7 +387,25 @@ function Reports() {
                 </div>
               </div>
               
-              <div className="p-4 border-t border-slate-800 bg-slate-950 shrink-0">
+              <div className="p-4 border-t border-slate-800 bg-slate-950 shrink-0 space-y-2">
+                <button
+                  onClick={(e) => handleDownloadPdf(selectedReport.id, selectedReport.scan_type, e)}
+                  className="w-full bg-emerald-950/20 hover:bg-emerald-900/30 border border-emerald-500/30 text-emerald-400 font-semibold py-2 rounded-lg transition duration-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  {downloadingId === selectedReport.id ? (
+                    <Loader2 size={13} className="animate-spin text-emerald-400" />
+                  ) : (
+                    <Download size={13} />
+                  )}
+                  Download PDF Report
+                </button>
+                <button
+                  onClick={() => navigate("/ai-chat", { state: { scanContext: selectedReport } })}
+                  className="w-full bg-cyan-950/20 hover:bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 font-semibold py-2 rounded-lg transition duration-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  <span>🤖</span>
+                  Ask AI to Explain Threat
+                </button>
                 <button
                   onClick={() => handleDeleteReport(selectedReport.id)}
                   className="w-full bg-red-950/20 hover:bg-red-900/30 border border-red-500/20 text-red-400 font-semibold py-2 rounded-lg transition duration-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"

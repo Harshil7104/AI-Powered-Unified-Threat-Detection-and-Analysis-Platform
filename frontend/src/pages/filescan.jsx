@@ -262,20 +262,62 @@ function FileScan() {
                     <ThreatScoreGauge score={result.risk_score} status={result.status} />
                   </div>
 
-                  {/* Hashes Info */}
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3 font-mono text-xs">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-355 border-b border-slate-800 pb-2">
-                      Checksum Hash Sums
-                    </h3>
-                    <div>
-                      <p className="text-[9px] text-slate-500 uppercase">MD5 DIGEST</p>
-                      <p className="bg-slate-950 p-2 rounded border border-slate-850 text-slate-300 select-all break-all mt-1">{result.md5}</p>
+                    {/* Hashes & Forensics Info */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3 font-mono text-xs">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-355 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span>Checksum Digests & Forensics</span>
+                        {result.detected_type && (
+                          <span className={`text-[9px] px-2 py-0.5 rounded border ${
+                            result.type_mismatch 
+                              ? "bg-red-500/10 border-red-500/30 text-red-400 font-bold" 
+                              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                          }`}>
+                            {result.type_mismatch ? "⚠️ TYPE MISMATCH" : "VERIFIED FORMAT"}
+                          </span>
+                        )}
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div className="bg-slate-950 p-2.5 rounded border border-slate-850">
+                          <p className="text-[9px] text-slate-500 uppercase">MAGIC FILE SIGNATURE</p>
+                          <p className="text-slate-200 font-bold mt-0.5 truncate">{result.detected_type || "Generic Binary"}</p>
+                        </div>
+                        <div className="bg-slate-950 p-2.5 rounded border border-slate-850">
+                          <p className="text-[9px] text-slate-500 uppercase">SHANNON ENTROPY</p>
+                          <p className="text-slate-200 font-bold mt-0.5">
+                            {result.entropy !== undefined ? `${result.entropy} / 8.0` : "N/A"}{" "}
+                            <span className="text-[10px] text-cyan-400 font-normal">({result.entropy_status || "Standard"})</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 pt-1">
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase">MD5 DIGEST</p>
+                          <p className="bg-slate-950 p-2 rounded border border-slate-850 text-slate-300 select-all break-all mt-1">{result.md5}</p>
+                        </div>
+                        {result.sha1 && (
+                          <div>
+                            <p className="text-[9px] text-slate-500 uppercase">SHA-1 DIGEST</p>
+                            <p className="bg-slate-950 p-2 rounded border border-slate-850 text-slate-300 select-all break-all mt-1">{result.sha1}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase">SHA-256 DIGEST</p>
+                          <p className="bg-slate-950 p-2 rounded border border-slate-850 text-slate-300 select-all break-all mt-1">{result.sha256}</p>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          onClick={() => navigate("/ai-chat", { state: { scanContext: { ...result, scan_type: "file", target: result.filename } } })}
+                          className="w-full bg-cyan-950/20 hover:bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 font-semibold py-2 rounded-lg transition duration-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                        >
+                          <span>🤖</span>
+                          Ask AI to Analyze File Diagnostics
+                        </button>
+                      </div>
                     </div>
-                    <div className="mt-2">
-                      <p className="text-[9px] text-slate-500 uppercase">SHA-256 DIGEST</p>
-                      <p className="bg-slate-950 p-2 rounded border border-slate-850 text-slate-300 select-all break-all mt-1">{result.sha256}</p>
-                    </div>
-                  </div>
 
                   {/* Diagnostic Checks */}
                   <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">

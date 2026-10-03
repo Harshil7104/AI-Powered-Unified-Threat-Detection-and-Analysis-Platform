@@ -51,45 +51,50 @@ Modern organizations face decentralized and blended cyber threats: phishing emai
 - **Rule-Based Heuristic Engine:**
   - Evaluates protocol security (HTTPS vs HTTP).
   - Flags raw IP hostnames (e.g., `http://192.168.1.1/login`).
-  - Detects suspicious subdomains and URL length anomalies.
+  - **Nested Subdomain & Brand Impersonation Detection:** Flags nested subdomains (e.g. `paypal.com.attacker.xyz`) and excessive subdomain depth.
+  - **Redirect-Chain & Final URL Analysis:** Follows HTTP redirects to evaluate cross-domain redirection and hop count.
   - Phishing keyword scanning (`secure-login`, `verify-account`, `banking`, etc.).
   - Known URL shortener detection (`bit.ly`, `tinyurl`, `t.co`, etc.).
 - **Live Threat Intelligence:**
-  - Integrated with **VirusTotal API** for malicious engine detection ratios.
+  - Integrated with **VirusTotal API v3** for multi-engine malicious detection ratios.
   - Correlated with **AlienVault OTX (Open Threat Exchange)** for active pulse indicators.
 - **Deep Network & Identity Inspection:**
-  - **SSL/TLS Certificate Inspection:** Issuer, validity window, expiry alerts.
-  - **WHOIS Domain Analysis:** Registrar, creation dates, domain age calculation.
-  - **IP Geolocation:** Resolves hosting country, ISP, and ASN.
+  - **SSL/TLS Certificate Inspection:** Issuer, validity window, days remaining, expiry alerts.
+  - **WHOIS Domain Analysis & Age Calculation:** Registrar, registration dates, and domain age calculation (new domains < 30 days flagged as high risk).
 
 ### 2. 📁 File Malware & Hash Scanner
 - **Cryptographic Hash Generation:** Automatically computes `MD5`, `SHA-1`, and `SHA-256` hashes upon upload.
+- **Shannon Entropy Analysis:** Computes byte-level entropy (0.0 to 8.0) to detect packed, obfuscated, or encrypted payloads.
+- **Magic-Byte Signature & Type Detection:** Inspects true file headers (PE Executables, PDFs, Archives, Office OpenXML, Images, Scripts).
+- **Extension Mismatch Flagging:** Automatically detects and alerts on deceptive masquerading files (e.g. Windows executables disguised with `.pdf` or `.jpg` extensions).
 - **Threat Reputation Lookup:** Queries VirusTotal database using file hashes to detect known trojans, ransomware, and spyware.
-- **Entropy & Structure Analysis:** Heuristic file-type verification, suspicious extension checks, and payload analysis.
 
 ### 3. 📧 Email Phishing & Header Analyzer
-- **Header Authentication Analysis:** Parses email headers to check SPF, DKIM, and DMARC alignment.
-- **Spoofing Detection:** Checks for mismatches between `From`, `Reply-To`, and `Return-Path`.
-- **Content & Link Inspection:** Scans email body text for urgency triggers, credential lures, and extracts embedded links for safety checks.
+- **Real Header & EML Parsing:** Parses raw RFC822 email headers and `.eml` multipart structures.
+- **Protocol Authentication Detection:** Extracts and verifies SPF, DKIM, and DMARC verdicts from `Authentication-Results` and `Received-SPF` headers.
+- **Header Alignment & Spoofing Detection:** Checks for domain mismatches between `From`, `Reply-To`, and `Return-Path`.
+- **Dangerous Attachment Detection:** Scans attached files for high-risk executable or script extensions.
+- **Content & Link Inspection:** Scans body copy for urgency triggers, credential lures, and extracts embedded links for automatic URL safety analysis.
 
 ### 4. 🤖 AI Cybersecurity Assistant (ThreatShield AI)
-- **Local & Private LLM:** Powered by **Ollama (`llama3.1:8b`)** running locally on device for zero data leakage.
-- **Context-Aware Assistance:** Explains complex threat reports, CVE vulnerabilities, and provides step-by-step remediation advice.
-- **Automatic Fallback Engine:** Features a built-in cybersecurity knowledge base that answers questions even when Ollama is offline.
+- **Local & Private LLM:** Powered by **Ollama (`llama3.1:8b`)** with support for Qwen models running on-premise for privacy.
+- **Active Scan Context Integration:** Capable of directly receiving URL, Email, or File scan results as context to provide tailored threat explanations and actionable mitigation steps.
+- **Automatic Fallback Engine:** Built-in heuristic cybersecurity advisor providing structured threat explanations even when Ollama is offline.
 
 ### 5. 📊 Threat Intelligence Dashboard & Analytics
 - Real-time security metrics: Total Scans, Malicious Detections, Suspicious Entities, Clean Status.
 - Visual Threat Score gauge with dynamic color states (Safe, Low, Moderate, High, Critical).
 - Quick scan launchpads and interactive recent activity feeds.
 
-### 6. 📄 Security Reports & History
-- Comprehensive log of past scans with filtering by scan type (`URL`, `File`, `Email`).
-- Detailed breakdown of triggered rules, engine flags, and timestamped forensic data.
+### 6. 📄 Security Reports & PDF Export
+- User-isolated threat history ensuring analysts only view their own scan records.
+- Filter and search reports by scan type (`URL`, `File`, `Email`) and status.
+- **Download Professional PDF Report:** One-click PDF generation featuring threat badges, checklists, forensics data, and incident response recommendations.
 
 ### 7. 🔐 Authentication & Access Control
-- JWT (JSON Web Token) bearer authentication.
-- Secure password hashing and credential validation.
-- Client-side route protection ensuring secure access to dashboard features.
+- JWT (JSON Web Token) bearer authentication with PBKDF2 password hashing.
+- Protected scanner and report API endpoints validating `Authorization: Bearer <token>`.
+- Client-side route protection and Axios authorization interceptors.
 
 ---
 
@@ -291,17 +296,21 @@ To use your local Llama model for the **AI Security Assistant**:
 
 ## 📡 API Endpoints Reference
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Server status and health check |
-| `POST` | `/auth/register` | Register a new user account |
-| `POST` | `/auth/login` | Authenticate user and receive JWT access token |
-| `POST` | `/url/scan` | Comprehensive URL threat, SSL, WHOIS, & Threat Intel analysis |
-| `POST` | `/file/scan` | Analyze uploaded file or hash against malware signatures |
-| `POST` | `/email/scan` | Inspect email headers, body text, and links for phishing |
-| `POST` | `/chat/message` | Query the AI cybersecurity assistant (Ollama / Fallback) |
-| `GET` | `/reports/summary` | Fetch dashboard threat statistics and metric counts |
-| `GET` | `/reports/recent` | Retrieve list of recent threat scan activity records |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | Public | Server status and health check |
+| `POST` | `/auth/register` | Public | Register a new analyst account and return JWT access token |
+| `POST` | `/auth/login` | Public | Authenticate user credentials and return JWT access token |
+| `GET` | `/auth/me` | Bearer JWT | Retrieve currently authenticated user profile |
+| `POST` | `/url/scan` | Bearer JWT | Deep URL inspection (Heuristics, Redirect chain, WHOIS age, SSL, VirusTotal, OTX) |
+| `POST` | `/file/scan` | Bearer JWT | File forensics (MD5, SHA-1, SHA-256, Shannon Entropy, Magic Bytes, VirusTotal) |
+| `POST` | `/email/scan` | Bearer JWT | Email inspection (EML/Headers, SPF, DKIM, DMARC, Reply-To spoofing, Body links) |
+| `POST` | `/chat/` | Public | AI Security Assistant (Context-aware explanation via Ollama Llama 3.1 8B / Qwen) |
+| `GET` | `/reports/stats` | Bearer JWT | User dashboard statistics (total scans, threats detected, type & status counts) |
+| `GET` | `/reports/` | Bearer JWT | Fetch user's historical threat scan reports with query filters |
+| `GET` | `/reports/{id}` | Bearer JWT | Retrieve comprehensive forensic details of a specific scan |
+| `GET` | `/reports/{id}/pdf`| Bearer JWT | **Download professional PDF threat intelligence report** |
+| `DELETE` | `/reports/{id}`| Bearer JWT | Delete specific threat scan log record |
 
 ---
 

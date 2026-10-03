@@ -30,6 +30,8 @@ function EmailScan() {
   const [sender, setSender] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [headers, setHeaders] = useState("");
+  const [showHeaders, setShowHeaders] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -51,11 +53,15 @@ function EmailScan() {
     setResult(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/email/scan", {
+      const payload = {
         sender: sender.trim(),
         subject: subject.trim(),
         body: body.trim()
-      });
+      };
+      if (headers.trim()) {
+        payload.headers = headers.trim();
+      }
+      const response = await axios.post("http://localhost:8000/email/scan", payload);
       setResult(response.data);
     } catch (err) {
       console.error("Email scan error:", err);
@@ -116,11 +122,10 @@ function EmailScan() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-mono transition-all duration-200 ${
-                  item.path === "/email-scan"
-                    ? "bg-slate-800 text-cyan-400 border border-slate-700/50"
-                    : "text-slate-400 hover:text-white hover:bg-slate-850"
-                }`}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-mono transition-all duration-200 ${item.path === "/email-scan"
+                  ? "bg-slate-800 text-cyan-400 border border-slate-700/50"
+                  : "text-slate-400 hover:text-white hover:bg-slate-850"
+                  }`}
               >
                 <span>{item.icon}</span>
                 <span>{item.name}</span>
@@ -211,9 +216,33 @@ function EmailScan() {
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     placeholder="Paste entire text content of the email here..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 font-sans transition h-40 resize-none"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 font-sans transition h-32 resize-none"
                     required
                   />
+                </div>
+
+                {/* Optional Raw Headers Accordion */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowHeaders(!showHeaders)}
+                    className="text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition"
+                  >
+                    <span>{showHeaders ? "▼ Hide" : "▶ Add"} Raw Email Headers / .EML Metadata (Optional)</span>
+                  </button>
+                  {showHeaders && (
+                    <div className="mt-2 space-y-1 animate-fadeIn">
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        Paste full headers (Authentication-Results, Received-SPF, DKIM-Signature, Reply-To, etc.)
+                      </p>
+                      <textarea
+                        value={headers}
+                        onChange={(e) => setHeaders(e.target.value)}
+                        placeholder="Authentication-Results: spf=pass dkim=pass dmarc=pass&#10;Reply-To: security@domain.com"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-cyan-400 focus:outline-none focus:border-cyan-400 transition h-28 resize-none"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -305,11 +334,10 @@ function EmailScan() {
                           <div className="text-xs font-mono">
                             <div className="flex items-center gap-2 font-bold text-slate-200">
                               <span>{check.name}</span>
-                              <span className={`text-[8px] px-1 rounded ${
-                                check.severity === "safe" ? "bg-emerald-500/10 text-emerald-400" :
+                              <span className={`text-[8px] px-1 rounded ${check.severity === "safe" ? "bg-emerald-500/10 text-emerald-400" :
                                 check.severity === "warning" ? "bg-yellow-500/10 text-yellow-400" :
-                                "bg-red-500/10 text-red-400"
-                              }`}>
+                                  "bg-red-500/10 text-red-400"
+                                }`}>
                                 {check.severity}
                               </span>
                             </div>
@@ -336,11 +364,10 @@ function EmailScan() {
                               </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                                urlScan.status === "Safe" ? "bg-emerald-500/10 text-emerald-400" :
+                              <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${urlScan.status === "Safe" ? "bg-emerald-500/10 text-emerald-400" :
                                 urlScan.status === "Suspicious" ? "bg-yellow-500/10 text-yellow-400" :
-                                "bg-red-500/10 text-red-400"
-                              }`}>
+                                  "bg-red-500/10 text-red-400"
+                                }`}>
                                 {urlScan.status}
                               </span>
                               <span className="font-mono font-bold text-slate-450">
@@ -352,6 +379,52 @@ function EmailScan() {
                       </div>
                     </div>
                   )}
+
+                  {/* Email Authentication Badges */}
+                  {result.details && result.details.auth_results && (
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5 font-mono text-xs">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex justify-between">
+                        <span>Email Protocols & Alignment</span>
+                        <span className="text-[9px] text-slate-500 font-normal">Header Authentication</span>
+                      </h4>
+                      <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                        <div className="bg-slate-950 p-2 rounded border border-slate-850">
+                          <p className="text-[9px] text-slate-500 uppercase">SPF</p>
+                          <p className={`text-xs font-bold uppercase mt-0.5 ${result.details.auth_results.spf === "pass" ? "text-emerald-400" :
+                            result.details.auth_results.spf === "fail" ? "text-red-400" : "text-yellow-400"
+                            }`}>
+                            {result.details.auth_results.spf}
+                          </p>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded border border-slate-850">
+                          <p className="text-[9px] text-slate-500 uppercase">DKIM</p>
+                          <p className={`text-xs font-bold uppercase mt-0.5 ${["pass", "present"].includes(result.details.auth_results.dkim) ? "text-emerald-400" :
+                            result.details.auth_results.dkim === "fail" ? "text-red-400" : "text-yellow-400"
+                            }`}>
+                            {result.details.auth_results.dkim}
+                          </p>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded border border-slate-850">
+                          <p className="text-[9px] text-slate-500 uppercase">DMARC</p>
+                          <p className={`text-xs font-bold uppercase mt-0.5 ${result.details.auth_results.dmarc === "pass" ? "text-emerald-400" :
+                            result.details.auth_results.dmarc === "fail" ? "text-red-400" : "text-yellow-400"
+                            }`}>
+                            {result.details.auth_results.dmarc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-1">
+                    <button
+                      onClick={() => navigate("/ai-chat", { state: { scanContext: { ...result, scan_type: "email", target: `${result.sender} | ${result.subject}` } } })}
+                      className="w-full bg-cyan-950/20 hover:bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 font-semibold py-2 rounded-lg transition duration-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                    >
+                      <span>🤖</span>
+                      Ask AI to Explain Email Analysis
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

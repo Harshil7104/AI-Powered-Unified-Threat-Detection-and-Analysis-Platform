@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Search, Loader2, Code2, AlertTriangle } from 'lucide-react';
 import ThreatScoreGauge from './ThreatScoreGauge';
@@ -21,6 +22,7 @@ export default function UrlScanner() {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [showJson, setShowJson] = useState(false);
+  const navigate = useNavigate();
 
   const handleScan = async (targetUrl = url) => {
     if (!targetUrl.trim()) return;
@@ -59,7 +61,7 @@ export default function UrlScanner() {
         setError("Failed to connect to FastAPI backend server. Please run the backend command in terminal: 'py -m uvicorn main:app --reload --port 8000'");
       }
     }
-    
+
     setLoading(false);
   };
 
@@ -77,7 +79,7 @@ export default function UrlScanner() {
           <Search size={18} style={{ color: 'var(--primary-cyan, #06b6d4)' }} />
           <span>Enter URL for Threat Analysis</span>
         </label>
-        
+
         <div className="input-wrapper">
           <input
             type="text"
@@ -87,9 +89,9 @@ export default function UrlScanner() {
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleScan()}
           />
-          <button 
-            className="scan-btn" 
-            onClick={() => handleScan()} 
+          <button
+            className="scan-btn"
+            onClick={() => handleScan()}
             disabled={loading || !url.trim()}
           >
             {loading ? (
@@ -136,13 +138,13 @@ export default function UrlScanner() {
         <>
           {/* Section 1: Standard Evaluation */}
           <div className="results-grid">
-            <ThreatScoreGauge 
-              score={scanResult.risk_score} 
-              status={scanResult.status} 
+            <ThreatScoreGauge
+              score={scanResult.risk_score}
+              status={scanResult.status}
             />
-            <CheckDetails 
-              checks={scanResult.checks} 
-              scannedUrl={scanResult.url} 
+            <CheckDetails
+              checks={scanResult.checks}
+              scannedUrl={scanResult.url}
             />
           </div>
 
@@ -157,9 +159,36 @@ export default function UrlScanner() {
             <IntelReportCard virustotal={scanResult.virustotal} otx={scanResult.otx} />
           </div>
 
+          {/* Ask AI Threat Assistant */}
+          <div style={{ marginTop: '1rem' }}>
+            <button
+              onClick={() => navigate('/ai-chat', { state: { scanContext: { ...scanResult, scan_type: 'url', target: scanResult.url } } })}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(6, 182, 212, 0.4)',
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                color: '#38bdf8',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                fontFamily: 'monospace',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <span>🤖</span>
+              <span>Ask AI to Explain This URL Threat & Recommendations</span>
+            </button>
+          </div>
+
           {/* Raw API Response View (Week 2 Axios & FastAPI Integration requirement) */}
           <div style={{ marginTop: '1.5rem' }}>
-            <button 
+            <button
               className="json-toggle-btn"
               onClick={() => setShowJson(!showJson)}
             >
